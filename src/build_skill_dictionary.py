@@ -82,5 +82,25 @@ def main():
 
     print("\nSaved to:", OUTPUT_PATH)
 
+    # Create a separate file for reviewing skills
+    review = filtered[
+        ["conceptUri","preferredLabel","altLabels","skillType"]
+    ].copy()
+
+    # columns for manual review
+    review["include"] = ""
+    review["category"] = ""
+    review["canonical_name"] = ""
+    review["notes"] = ""
+
+    review_path = (
+        BASE_DIR / "data" / "processed" / "esco_skill_review.csv"
+    )
+
+    review.to_csv(review_path,index=False)
+
+    print("Review file saved to:", review_path)
+    
+
 if __name__ == "__main__":
     main()
