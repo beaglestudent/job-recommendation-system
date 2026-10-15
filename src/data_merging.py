@@ -33,6 +33,26 @@ merged = jobs.merge(companies,
 # Handle the missing company names
 merged["company_name"] = merged["company_name"].fillna("Unknown Company")
 
+# Load job skills dataset
+SKILLS_PATH = BASE_DIR / "data" / "raw" / "job_skills.csv"
+skills_df = pd.read_csv(SKILLS_PATH, low_memory=False)
+
+# Remove duplicate job_cateogory relationships
+skills_df = skills_df.drop_duplicates(subset=["job_id", "skill_abr"])
+
+# Group categories belonging to the same job
+skills_grouped = skills_df.groupby("job_id")["skill_abr"].apply(lambda values: ", ".join(sorted(values.dropna()))).reset_index()
+
+# Merge with job dataset
+merged = merged.merge(skills_grouped, 
+                      on="job_id", 
+                      how="left",
+                      validate = "one_to_one")
+
+# Handle jobs without skill category records
+merged["skill_categories"] = merged["skill_abr"].fillna("Not Specified")
+merged = merged.drop(columns=["skill_abr"], errors="ignore")
+
 # Verify merge results
 print("\nMerged Dataset shape:", merged.shape )
 
@@ -40,8 +60,17 @@ print("Missing company names:", (merged["company_name"] == "Unknown Company").su
 
 # Ensure no miss any job
 assert len(merged) == len(jobs), "Mismatch in number of jobs after merging"
+assert merged["job_id"].is_unique, "Duplicate job IDs found after merging"
+assert 'skill_categories' in merged.columns, "Skill categories column missing after merging"
 
 # Save the final merged dataset
 merged.to_csv(OUTPUT_PATH, index=False)
 
 print("\nFinal merged dataset saved successfully")
+
+# Checking 
+print("\nFinal dataset columns:", merged.columns.tolist())
+print("\nSample skills categories:")
+print(
+    merged[["title","company_name", "skill_categories"]].head(10).to_string(index=False)
+)
