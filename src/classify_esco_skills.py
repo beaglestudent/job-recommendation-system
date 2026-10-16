@@ -11,7 +11,7 @@ INPUT_PATH = (
 
 OUTPUT_PATH = (
     BASE_DIR / "data" / "processed"
-    / "esco_skill_review.csv"
+    / "esco_skill_classified.csv"
 )
 
 CATEGORY_RULES = {
@@ -89,6 +89,18 @@ def main():
 
     print("\nSaved to:", OUTPUT_PATH)
 
+    print("\nClassification summary:")
+    print(review["category"].value_counts(dropna=False))
+
+    print("\nUnclassified skills:")
+    print(
+        review.loc[
+            review["category"] == "",
+            "preferredLabel"
+    ].head(20).to_string(index=False)
+)
+
 
 if __name__ == "__main__":
     main()
+    
